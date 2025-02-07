@@ -1,0 +1,105 @@
+<div class="task-list-container">
+    <h1>Danh Sách Nhiệm Vụ</h1>
+    
+    <div class="add-task-form">
+      <input 
+        type="text" 
+        [(ngModel)]="newTask.title" 
+        placeholder="Nhập nhiệm vụ mới"
+        (keyup.enter)="addTask()"
+      >
+      <input 
+        type="date" 
+        [(ngModel)]="newTask.dueDate"
+        placeholder="Ngày đến hạn"
+      >
+      <button (click)="addTask()">Thêm</button>
+    </div>
+  
+    <!-- Bộ lọc -->
+    <div class="filter-buttons">
+      <button 
+        [class.active]="filter === 'all'"
+        (click)="filter = 'all'"
+      >
+        Tất cả
+      </button>
+      <button 
+        [class.active]="filter === 'active'"
+        (click)="filter = 'active'"
+      >
+        Đang thực hiện
+      </button>
+      <button 
+        [class.active]="filter === 'completed'"
+        (click)="filter = 'completed'"
+      >
+        Đã hoàn thành
+      </button>
+    </div>
+  
+    <ul class="task-list">
+      <li *ngFor="let task of getFilteredTasks()" 
+          [class.completed]="task.completed"
+          [class.overdue]="isTaskOverdue(task)">
+        <!-- Chế độ hiển thị bình thường -->
+        <ng-container *ngIf="editingTask?.id !== task.id">
+          <input 
+            type="checkbox" 
+            [checked]="task.completed"
+            (change)="toggleTaskCompletion(task)"
+          >
+          <div class="task-details">
+            <span class="task-title">{{ task.title }}</span>
+            
+            <div class="task-metadata">
+              <small>Ngày tạo: {{ task.createdAt | date:'dd/MM/yyyy' }}</small>
+              
+              <small *ngIf="task.dueDate" 
+                     [class.overdue]="isTaskOverdue(task)">
+                Đến hạn: {{ task.dueDate | date:'dd/MM/yyyy' }}
+                <span *ngIf="getDaysRemaining(task) !== null">
+                  (Còn {{ getDaysRemaining(task) }} ngày)
+                </span>
+              </small>
+              
+              <small *ngIf="task.completedAt">
+                Hoàn thành: {{ task.completedAt | date:'dd/MM/yyyy HH:mm' }}
+              </small>
+            </div>
+          </div>
+          
+          <div class="task-actions">
+            <button (click)="startEditing(task)">Sửa</button>
+            <button (click)="deleteTask(task.id)">Xóa</button>
+          </div>
+        </ng-container>
+  
+        <!-- Chế độ chỉnh sửa -->
+        <ng-container *ngIf="editingTask?.id === task.id && editingTask as currentEditingTask">
+          <div class="edit-task-form">
+            <input 
+              type="text" 
+              [(ngModel)]="currentEditingTask.title"
+              (keyup.enter)="saveEdit()"
+              autofocus
+            >
+            <input 
+              type="date" 
+              [(ngModel)]="currentEditingTask.dueDate"
+            >
+            <div class="edit-actions">
+              <button (click)="saveEdit()">Lưu</button>
+              <button (click)="cancelEdit()">Hủy</button>
+            </div>
+          </div>
+        </ng-container>
+      </li>
+    </ul>
+  
+    <!-- Thống kê -->
+    <div class="task-stats" *ngIf="tasks.length > 0">
+      <span>{{ getRemainingTaskCount() }} việc còn lại</span>
+    </div>
+  </div>
+  
